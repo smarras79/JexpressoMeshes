@@ -6,7 +6,6 @@ xmin = 0;
 xmax = 10;
 ymin = 0;
 ymax = 20;
-
 gridsize = (xmax-xmin) / nelemx;
 
 Point(1) = {xmin, ymin, gridsize};
