@@ -4,8 +4,8 @@ $EndMeshFormat
 $PhysicalNames
 4
 2 1 "free_slip"
-2 3 "periodic2"
-2 4 "periodic1"
+2 3 "periodicz"
+2 4 "periodicx"
 3 2 "internal"
 $EndPhysicalNames
 $Entities

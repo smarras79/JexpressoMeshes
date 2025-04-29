@@ -6,7 +6,7 @@ $PhysicalNames
 2 1 "bottom"
 2 3 "back"
 2 4 "front"
-2 5 "periodic1"
+2 5 "periodicx"
 2 7 "top"
 3 2 "internal"
 $EndPhysicalNames
