@@ -3,10 +3,10 @@ $MeshFormat
 $EndMeshFormat
 $PhysicalNames
 5
-2 1 "periodic1"
+2 1 "periodicx"
 2 3 "bottom"
 2 4 "top"
-2 5 "periodic3"
+2 5 "periodicy"
 3 2 "internal"
 $EndPhysicalNames
 $Entities
