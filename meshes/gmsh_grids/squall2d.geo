@@ -1,12 +1,12 @@
-nelemx = 20;
-nelemy = 5;
+nelemx = 25;
+nelemy = 10;
 nelemz = 1;
 
-xmin = -40000;
-xmax =  40000;
-ymin =    0.0;
+xmin = -50000;
+xmax =	50000;
+ymin =  0;
 ymax =  24000;
-gridsize = (xmax-xmin) / nelemx;
+gridsize = (xmax - xmin) / nelemx;
 
 Point(1) = {xmin, ymin, gridsize};
 Point(2) = {xmax, ymin, gridsize};
@@ -18,7 +18,6 @@ Line(2) = {2, 3};
 Line(3) = {3, 4};
 Line(4) = {4, 1};
 
-
 npx = nelemx + 1;
 npy = nelemy + 1;
 
@@ -26,7 +25,6 @@ npy = nelemy + 1;
 Transfinite Line {1, 3} = npx; //Ceil((xmax-xmin)/gridsize) Using Progression 1;
 //Vertical sides
 Transfinite Line {4, -2} = npy Using Progression 1.0;
-
 
 Line Loop(11) = {4, 1, 2, 3};
 Plane Surface(12) = {11};
@@ -56,9 +54,9 @@ Recombine Surface {12};
 // in a single group (with prescribed tag 5); and a physical surface with name
 // "My surface" (with an automatic tag) containing the geometrical surface 1:
 //
-Physical Point("boundary", 1) = {1, 2, 3, 4};
-Physical Curve("solid",    2) = {1, 3};
-Physical Curve("periodic1",3) = {2, 4};
+Physical Point("boundary",   1) = {1, 2, 3, 4};
+Physical Curve("periodicx",     2) = {2,4};
+Physical Curve("free_slip", 3) = {1, 3};
 Physical Surface("domain") = {1};
 
 //

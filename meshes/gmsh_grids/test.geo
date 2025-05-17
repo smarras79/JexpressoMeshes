@@ -59,7 +59,7 @@ Physical Surface("bottom") = {12};
 Physical Volume("internal") = {1};
 Physical Surface("back") = {25};
 Physical Surface("front") = {33};
-Physical Surface("periodic1") = {21, 29};
+Physical Surface("periodicx") = {21, 29};
 Physical Surface("top") = {34}; // from Plane Surface (6)
 
 Show "*";
