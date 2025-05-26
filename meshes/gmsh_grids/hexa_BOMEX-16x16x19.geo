@@ -54,8 +54,8 @@ surfaceVector = Extrude {0,(ymax-ymin),0} {
     */
     Physical Surface("free_slip") = {12,34};
     Physical Volume("internal") = {1};
-    Physical Surface("periodic2") = {25,33};
-    Physical Surface("periodic1") = {21,29};
+    Physical Surface("periodicz") = {25,33};
+    Physical Surface("periodicx") = {21,29};
     // from Plane Surface (6) ...
   //+
 Show "*";

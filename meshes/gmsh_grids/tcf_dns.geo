@@ -1,13 +1,13 @@
-nelemx = 10;
-nelemy = 10;
-nelemz = 12;
+nelemx = 64;
+nelemy = 1;
+nelemz = 32;
 
 xmin =  0;
-xmax =	6400;
+xmax =	16;
 ymin =  0;
-ymax =  6400;
-zmin =   0;
-zmax =  3000;
+ymax =  2;
+zmin =  0;
+zmax =  8;
 gridsize = (xmax-xmin) / nelemx;
 
 Point(1) = {xmin, ymin, zmin, gridsize};
@@ -54,10 +54,14 @@ surfaceVector = Extrude {0,(ymax-ymin),0} {
     */
     Physical Surface("periodicy") = {12,34};
     Physical Volume("internal") = {1};
-    Physical Surface("not_periodicz") = {25,33};
+    Physical Surface("non_periodicz") = {25,33};
     Physical Surface("periodicx") = {21,29};
     // from Plane Surface (6) ...
   //+
+Show "*";
+//+
+Show "*";
+//+
 Show "*";
 //+
 Show "*";
