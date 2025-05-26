@@ -59,7 +59,7 @@ Recombine Surface {12};
 Physical Point("boundary",   1) = {1, 2, 3, 4};
 Physical Curve("free_slip",   2) = {1, 2, 4};
 Physical Curve("Laguerre",   3) = {3};
-//Physical Curve("periodic1",   4) = {2, 4};
+//Physical Curve("periodicx",   4) = {2, 4};
 Physical Surface("domain") = {1};
 
 //

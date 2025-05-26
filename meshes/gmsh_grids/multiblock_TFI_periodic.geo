@@ -55,6 +55,6 @@ Recombine Surface {14,16,18,20,22};
 Coherence;
 
 Physical Point("boundary",   1) = {5, 6, 7, 8};
-Physical Curve("periodic1",  2) = {7, 5};
-Physical Curve("periodic2",  3) = {8, 6};
+Physical Curve("periodicx",  2) = {7, 5};
+Physical Curve("periodicz",  3) = {8, 6};
 Physical Surface("domain") = {14,16,18,20,22};
