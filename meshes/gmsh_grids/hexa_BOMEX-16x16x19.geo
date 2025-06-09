@@ -52,9 +52,9 @@ surfaceVector = Extrude {0,(ymax-ymin),0} {
      [4] - top surface (belonging to 3rd line in "Line Loop (6)")
      [5] - left surface (belonging to 4th line in "Line Loop (6)")
     */
-    Physical Surface("free_slip") = {12,34};
+    Physical Surface("periodicy") = {12,34};
     Physical Volume("internal") = {1};
-    Physical Surface("periodicz") = {25,33};
+    Physical Surface("free_slip") = {25,33};
     Physical Surface("periodicx") = {21,29};
     // from Plane Surface (6) ...
   //+
