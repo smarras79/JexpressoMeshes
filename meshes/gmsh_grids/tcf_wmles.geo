@@ -1,11 +1,11 @@
 nelemx = 16;
 nelemy = 16;
-nelemz = 19;
+nelemz = 7; //19;
 
 xmin =  0;
-xmax =	6400;
+xmax =	6280;
 ymin =  0;
-ymax =  6400;
+ymax =  6280;
 zmin =   0;
 zmax =  3000;
 gridsize = (xmax-xmin) / nelemx;
@@ -27,8 +27,8 @@ npz = nelemz + 1;
 //Horizontal sides
 Transfinite Line {1, 3} = npx; //Ceil((xmax-xmin)/gridsize) Using Progression 1;
 //Vertical sides
-Transfinite Line {4, -2} = npz Using Progression 1.0;
-//Transfinite Curve {4, -2} = npz + 1 Using Bump 0.2;
+//Transfinite Line {4, -2} = npz Using Progression 1.0;
+Transfinite Curve {4, -2} = npz + 1 Using Bump 0.2;
 
 Line Loop(11) = {4, 1, 2, 3};
 Plane Surface(12) = {11};
