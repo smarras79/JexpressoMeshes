@@ -53,7 +53,8 @@ surfaceVector = Extrude {0,(ymax-ymin),0} {
     */
     Physical Surface("periodicy") = {12,34};
     Physical Volume("internal") = {1};
-    Physical Surface("wall_model") = {25,33};
+    Physical Surface("wall_model_top") = {33};
+    Physical Surface("wall_model_bottom") = {25};
     Physical Surface("periodicx") = {21,29};
     // from Plane Surface (6) ...
   //+
