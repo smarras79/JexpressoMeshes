@@ -4,8 +4,8 @@ $EndMeshFormat
 $PhysicalNames
 5
 2 1 "periodicy"
-2 3 "wall_model_top"
-2 4 "wall_model_bottom"
+2 3 "top"
+2 4 "MOST"
 2 5 "periodicx"
 3 2 "internal"
 $EndPhysicalNames
