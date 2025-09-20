@@ -1,6 +1,6 @@
-nelemx = 64;
+nelemx = 32;
 nelemy = 2;
-nelemz = 32;
+nelemz = 16;
 
 L = 1000.0;
 
