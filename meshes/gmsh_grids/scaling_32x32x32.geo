@@ -52,14 +52,12 @@ surfaceVector = Extrude {0,(ymax-ymin),0} {
      [4] - top surface (belonging to 3rd line in "Line Loop (6)")
      [5] - left surface (belonging to 4th line in "Line Loop (6)")
     */
-    Physical Surface("back") = {12};
-    Physical Volume("internal") = {1};
+    Physical Volume("internal") = {1}; 
+    Physical Surface("front") = {12};
+    Physical Surface("back") = {34};
     Physical Surface("bottom") = {25};
     Physical Surface("top") = {33};
-    Physical Surface("right") = {21};
-    Physical Surface("left") = {29};
-    Physical Surface("front") = {34}; // from Plane Surface (6) ...
+    Physical Surface("left") = {21};
+    Physical Surface("right") = {29}; 
+
   //+
-Show "*";
-//+
-Show "*";
