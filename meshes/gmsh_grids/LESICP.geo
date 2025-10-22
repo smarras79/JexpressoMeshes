@@ -1,16 +1,15 @@
-nelemx = 80; //128
-nelemy = 1; //40; //64
-nelemz = 10; //40
+nelemx = 128;
+nelemy = 128;
+nelemz = 36;
 
 //
 // Nelx = Lx/(nop*Dx)
 //
-
 xmin =  0;
 xmax =	10240.0;
 ymin =  0;
-ymax =  1000.0;
-//ymax =  5120.0;
+ymax =  10240.0;
+//ymax =  10240.0;
 zmin =   0;
 zmax =  3000.0;
 gridsize = (xmax-xmin) / nelemx;
