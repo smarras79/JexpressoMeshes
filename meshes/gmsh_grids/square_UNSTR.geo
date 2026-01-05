@@ -27,7 +27,7 @@ npy = nelemy + 1;
 //Horizontal sides
 Transfinite Line {1, 3} = npx; //Ceil((xmax-xmin)/gridsize) Using Progression 1;
 //Vertical sides
-Transfinite Line {4, -2} = npy Using Progression 1.0;
+Transfinite Line {4, -2} = npy; //Using Progression 1.0;
 //
 Curve Loop(1) = {4, 1, 2, 3};
 //
