@@ -320,10 +320,30 @@ All 3D meshes are generated using the same extrusion pattern as LESICP.geo:
   - Line 3 (top): z=zmax → Surface tagged "top_wall"
   - Line 4 (left): x=xmin → Surface tagged "left" or in "periodicx"
 
-### 2D Meshes
+### 2D Mesh Geometry (Reference: Standard 2D .geo files)
+
+All 2D meshes follow this consistent pattern:
+1. **Points** at corners: p1 (xmin,ymin), p2 (xmax,ymin), p3 (xmax,ymax), p4 (xmin,ymax)
+2. **Lines** connecting points:
+   - Line 1 (bottom): p1 → p2
+   - Line 2 (right): p2 → p3
+   - Line 3 (top): p3 → p4
+   - Line 4 (left): p4 → p1
+3. **Line loop** {left, bottom, right, top} = {4, 1, 2, 3}
+4. **Surface** created from line loop
+
+### 2D Meshes (Non-periodic)
 - `"domain"` - The computational domain (surface)
-- `"bottom"`, `"top"`, `"left"`, `"right"` - Boundary edges
-- `"periodicx"`, `"periodicy"` - Periodic boundaries when applicable
+- `"bottom"` - Bottom edge (Line 1)
+- `"top"` - Top edge (Line 3)
+- `"left"` - Left edge (Line 4)
+- `"right"` - Right edge (Line 2)
+
+### 2D Meshes (Periodic)
+- `"domain"` - The computational domain (surface)
+- `"periodicx"` - x-direction periodic boundaries (left + right edges)
+- `"periodicy"` - y-direction periodic boundaries (bottom + top edges)
+- For partially periodic: non-periodic boundaries use standard names (top, bottom, left, right)
 
 ### 3D Meshes (Periodic - LESICP-style)
 - `"internal"` - The computational volume

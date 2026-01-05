@@ -137,8 +137,8 @@ function generate_2d_structured_mesh(params::MeshParams2D; recombine=true, outpu
     gmsh.model.geo.mesh.setTransfiniteCurve(l2, params.ny + 1)
     gmsh.model.geo.mesh.setTransfiniteCurve(l4, params.ny + 1)
 
-    # Create surface
-    curve_loop = gmsh.model.geo.addCurveLoop([l1, l2, l3, l4])
+    # Create surface with line loop matching reference .geo: {left, bottom, right, top}
+    curve_loop = gmsh.model.geo.addCurveLoop([l4, l1, l2, l3])
     surface = gmsh.model.geo.addPlaneSurface([curve_loop])
 
     # Set transfinite surface
@@ -151,12 +151,15 @@ function generate_2d_structured_mesh(params::MeshParams2D; recombine=true, outpu
     # Synchronize before adding physical groups
     gmsh.model.geo.synchronize()
 
-    # Add physical groups for boundaries
-    for (tag_name, line_ids) in params.boundary_tags
-        if tag_name != "domain"
-            gmsh.model.addPhysicalGroup(1, line_ids, -1, tag_name)
-        end
-    end
+    # Add physical groups for boundaries matching reference .geo
+    # Physical Curve("top") = {l3}
+    # Physical Curve("bottom") = {l1}
+    # Physical Curve("left") = {l4}
+    # Physical Curve("right") = {l2}
+    gmsh.model.addPhysicalGroup(1, [l3], -1, "top")
+    gmsh.model.addPhysicalGroup(1, [l1], -1, "bottom")
+    gmsh.model.addPhysicalGroup(1, [l4], -1, "left")
+    gmsh.model.addPhysicalGroup(1, [l2], -1, "right")
 
     # Add physical surface
     gmsh.model.addPhysicalGroup(2, [surface], -1, "domain")
@@ -222,8 +225,8 @@ function generate_3d_structured_mesh(params::MeshParams3D; recombine=true, outpu
     gmsh.model.geo.mesh.setTransfiniteCurve(l2, params.nz + 1)
     gmsh.model.geo.mesh.setTransfiniteCurve(l4, params.nz + 1)
 
-    # Create base surface
-    curve_loop = gmsh.model.geo.addCurveLoop([l1, l2, l3, l4])
+    # Create base surface with line loop matching reference LESICP.geo: {left, bottom, right, top}
+    curve_loop = gmsh.model.geo.addCurveLoop([l4, l1, l2, l3])
     base_surface = gmsh.model.geo.addPlaneSurface([curve_loop])
 
     # Set transfinite surface
@@ -341,8 +344,8 @@ function generate_2d_periodic_mesh(params::MeshParams2D; periodic_x=true, period
     gmsh.model.geo.mesh.setTransfiniteCurve(l2, params.ny + 1)
     gmsh.model.geo.mesh.setTransfiniteCurve(l4, params.ny + 1)
 
-    # Create surface
-    curve_loop = gmsh.model.geo.addCurveLoop([l1, l2, l3, l4])
+    # Create surface with line loop matching reference .geo: {left, bottom, right, top}
+    curve_loop = gmsh.model.geo.addCurveLoop([l4, l1, l2, l3])
     surface = gmsh.model.geo.addPlaneSurface([curve_loop])
 
     gmsh.model.geo.mesh.setTransfiniteSurface(surface)
@@ -352,7 +355,7 @@ function generate_2d_periodic_mesh(params::MeshParams2D; periodic_x=true, period
 
     # Set periodic boundary conditions
     if periodic_x
-        # Left and right boundaries are periodic
+        # Left (l4) and right (l2) boundaries are periodic
         gmsh.model.mesh.setPeriodic(1, [l2], [l4], [1, 0, 0, params.xmax - params.xmin,
                                                     0, 1, 0, 0,
                                                     0, 0, 1, 0,
@@ -361,7 +364,7 @@ function generate_2d_periodic_mesh(params::MeshParams2D; periodic_x=true, period
     end
 
     if periodic_y
-        # Bottom and top boundaries are periodic
+        # Bottom (l1) and top (l3) boundaries are periodic
         gmsh.model.mesh.setPeriodic(1, [l3], [l1], [1, 0, 0, 0,
                                                     0, 1, 0, params.ymax - params.ymin,
                                                     0, 0, 1, 0,
@@ -369,7 +372,7 @@ function generate_2d_periodic_mesh(params::MeshParams2D; periodic_x=true, period
         gmsh.model.addPhysicalGroup(1, [l1, l3], -1, "periodicy")
     end
 
-    # Add non-periodic boundaries as physical groups
+    # Add non-periodic boundaries as physical groups (matching reference names)
     if !periodic_y
         gmsh.model.addPhysicalGroup(1, [l1], -1, "bottom")
         gmsh.model.addPhysicalGroup(1, [l3], -1, "top")
@@ -439,8 +442,8 @@ function generate_3d_periodic_mesh(params::MeshParams3D; periodic_x=true, period
     gmsh.model.geo.mesh.setTransfiniteCurve(l2, params.nz + 1)
     gmsh.model.geo.mesh.setTransfiniteCurve(l4, params.nz + 1)
 
-    # Create base surface
-    curve_loop = gmsh.model.geo.addCurveLoop([l1, l2, l3, l4])
+    # Create base surface with line loop matching reference LESICP.geo: {left, bottom, right, top}
+    curve_loop = gmsh.model.geo.addCurveLoop([l4, l1, l2, l3])
     base_surface = gmsh.model.geo.addPlaneSurface([curve_loop])
 
     gmsh.model.geo.mesh.setTransfiniteSurface(base_surface)
@@ -562,7 +565,8 @@ function create_stretched_mesh_3d(params::MeshParams3D, z_stretch_factor::Float6
     gmsh.model.geo.mesh.setTransfiniteCurve(l2, params.nz + 1, coef=z_stretch_factor)
     gmsh.model.geo.mesh.setTransfiniteCurve(l4, params.nz + 1, coef=z_stretch_factor)
 
-    curve_loop = gmsh.model.geo.addCurveLoop([l1, l2, l3, l4])
+    # Create base surface with line loop matching reference: {left, bottom, right, top}
+    curve_loop = gmsh.model.geo.addCurveLoop([l4, l1, l2, l3])
     base_surface = gmsh.model.geo.addPlaneSurface([curve_loop])
 
     gmsh.model.geo.mesh.setTransfiniteSurface(base_surface)
