@@ -301,21 +301,47 @@ generate_3d_periodic_mesh(params, periodic_x=true, periodic_y=true,
 
 ## Boundary Condition Tags
 
-The module automatically creates physical groups for boundary conditions:
+The module automatically creates physical groups for boundary conditions that exactly match the reference LESICP.geo file structure.
+
+### 3D Mesh Geometry (Reference: LESICP.geo)
+
+All 3D meshes are generated using the same extrusion pattern as LESICP.geo:
+1. **Base surface** created in x-z plane at y=ymin with points at corners
+2. **Line loop** {bottom, right, top, left} forms the base surface
+3. **Extrusion** in +y direction creates the 3D volume
+4. **Surfaces** are automatically identified and tagged from the extrusion
+
+**Surface ordering from GMSH extrusion:**
+- Base surface (back): y=ymin (created before extrusion)
+- Extruded surface (front): y=ymax (returned as first element)
+- Lateral surfaces from line loop:
+  - Line 1 (bottom): z=zmin → Surface tagged "MOST"
+  - Line 2 (right): x=xmax → Surface tagged "right" or in "periodicx"
+  - Line 3 (top): z=zmax → Surface tagged "top_wall"
+  - Line 4 (left): x=xmin → Surface tagged "left" or in "periodicx"
 
 ### 2D Meshes
 - `"domain"` - The computational domain (surface)
 - `"bottom"`, `"top"`, `"left"`, `"right"` - Boundary edges
 - `"periodicx"`, `"periodicy"` - Periodic boundaries when applicable
 
-### 3D Meshes
+### 3D Meshes (Periodic - LESICP-style)
 - `"internal"` - The computational volume
-- `"bottom"`, `"top"`, `"left"`, `"right"`, `"front"`, `"back"` - Boundary surfaces
-- `"periodicx"`, `"periodicy"`, `"periodicz"` - Periodic boundaries
-- `"MOST"` - Bottom surface (Monin-Obukhov Similarity Theory boundary)
-- `"top_wall"` - Top surface
+- `"periodicy"` - y-direction periodic boundaries (back + front surfaces)
+- `"periodicx"` - x-direction periodic boundaries (left + right surfaces)
+- `"MOST"` - Bottom surface (z=zmin, Monin-Obukhov Similarity Theory)
+- `"top_wall"` - Top surface (z=zmax)
 
-These tags are recognized by Jexpresso for applying boundary conditions.
+### 3D Meshes (Non-periodic)
+- `"internal"` - The computational volume
+- `"back"` - y=ymin surface
+- `"front"` - y=ymax surface
+- `"bottom"` - z=zmin surface
+- `"top"` - z=zmax surface
+- `"left"` - x=xmin surface
+- `"right"` - x=xmax surface
+
+These tags are recognized by Jexpresso for applying boundary conditions and exactly match the structure of meshes generated from LESICP.geo.
 
 ## Integration with Jexpresso
 

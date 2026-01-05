@@ -244,59 +244,45 @@ function generate_3d_structured_mesh(params::MeshParams3D; recombine=true, outpu
     # Synchronize after extrusion
     gmsh.model.geo.synchronize()
 
-    # Extract volume and surfaces from extrusion
-    # extruded contains: [(dim, tag), ...] where the volume is typically the first element
+    # Extract surfaces from extrusion
+    # According to GMSH documentation, extruded array contains in order:
+    # [0] - (dim=2, tag) front surface (opposed to source surface, y=ymax)
+    # [1] - (dim=3, tag) extruded volume
+    # [2] - (dim=2, tag) lateral surface from 1st line in curve loop (Line 1: bottom, z=zmin)
+    # [3] - (dim=2, tag) lateral surface from 2nd line in curve loop (Line 2: right, x=xmax)
+    # [4] - (dim=2, tag) lateral surface from 3rd line in curve loop (Line 3: top, z=zmax)
+    # [5] - (dim=2, tag) lateral surface from 4th line in curve loop (Line 4: left, x=xmin)
+    # base_surface is the back surface (y=ymin)
+
     volume_tag = nothing
-    surface_tags = Dict{String,Int}()
+    front_surface = nothing  # y=ymax
+    bottom_surface = nothing  # z=zmin
+    right_surface = nothing   # x=xmax
+    top_surface = nothing     # z=zmax
+    left_surface = nothing    # x=xmin
+    back_surface = base_surface  # y=ymin
 
-    for (dim, tag) in extruded
-        if dim == 3
-            volume_tag = tag
-        end
+    if length(extruded) >= 6
+        front_surface = extruded[1][2]      # [0] in array -> index 1 in Julia
+        volume_tag = extruded[2][2]         # [1] in array -> index 2 in Julia
+        bottom_surface = extruded[3][2]     # [2] in array -> index 3 in Julia
+        right_surface = extruded[4][2]      # [3] in array -> index 4 in Julia
+        top_surface = extruded[5][2]        # [4] in array -> index 5 in Julia
+        left_surface = extruded[6][2]       # [5] in array -> index 6 in Julia
     end
-
-    # Get all surfaces to identify boundaries
-    # The extrusion creates surfaces in a specific order:
-    # base_surface (back, y=ymin), top surface (front, y=ymax), and side surfaces
-    all_surfaces = gmsh.model.getEntities(2)
 
     # Add physical groups
     if !isnothing(volume_tag)
         gmsh.model.addPhysicalGroup(3, [volume_tag], -1, "internal")
     end
 
-    # For boundaries, we need to identify them properly
-    # This is a simplified version - for production, you'd want more robust boundary identification
-    surface_ids = [tag for (dim, tag) in all_surfaces if dim == 2]
-
-    # Add all surfaces as boundaries (user can customize this)
-    if length(surface_ids) > 0
-        # Back surface (y=ymin)
-        gmsh.model.addPhysicalGroup(2, [base_surface], -1, "back")
-
-        # Try to identify other surfaces
-        remaining_surfaces = filter(x -> x != base_surface, surface_ids)
-        if length(remaining_surfaces) >= 1
-            # Front surface (y=ymax)
-            gmsh.model.addPhysicalGroup(2, [remaining_surfaces[1]], -1, "front")
-        end
-        if length(remaining_surfaces) >= 2
-            # Bottom surface (z=zmin)
-            gmsh.model.addPhysicalGroup(2, [remaining_surfaces[2]], -1, "bottom")
-        end
-        if length(remaining_surfaces) >= 3
-            # Right surface (x=xmax)
-            gmsh.model.addPhysicalGroup(2, [remaining_surfaces[3]], -1, "right")
-        end
-        if length(remaining_surfaces) >= 4
-            # Top surface (z=zmax)
-            gmsh.model.addPhysicalGroup(2, [remaining_surfaces[4]], -1, "top")
-        end
-        if length(remaining_surfaces) >= 5
-            # Left surface (x=xmin)
-            gmsh.model.addPhysicalGroup(2, [remaining_surfaces[5]], -1, "left")
-        end
-    end
+    # Add boundary physical groups
+    gmsh.model.addPhysicalGroup(2, [back_surface], -1, "back")
+    gmsh.model.addPhysicalGroup(2, [front_surface], -1, "front")
+    gmsh.model.addPhysicalGroup(2, [bottom_surface], -1, "bottom")
+    gmsh.model.addPhysicalGroup(2, [right_surface], -1, "right")
+    gmsh.model.addPhysicalGroup(2, [top_surface], -1, "top")
+    gmsh.model.addPhysicalGroup(2, [left_surface], -1, "left")
 
     # Generate mesh
     gmsh.model.mesh.generate(3)
@@ -468,59 +454,59 @@ function generate_3d_periodic_mesh(params::MeshParams3D; periodic_x=true, period
 
     gmsh.model.geo.synchronize()
 
-    # Get volume tag
+    # Extract surfaces from extrusion
+    # According to GMSH documentation, extruded array contains in order:
+    # [0] - (dim=2, tag) front surface (opposed to source surface, y=ymax)
+    # [1] - (dim=3, tag) extruded volume
+    # [2] - (dim=2, tag) lateral surface from 1st line in curve loop (Line 1: bottom, z=zmin)
+    # [3] - (dim=2, tag) lateral surface from 2nd line in curve loop (Line 2: right, x=xmax)
+    # [4] - (dim=2, tag) lateral surface from 3rd line in curve loop (Line 3: top, z=zmax)
+    # [5] - (dim=2, tag) lateral surface from 4th line in curve loop (Line 4: left, x=xmin)
+    # base_surface is the back surface (y=ymin)
+
+    # Parse the extruded entities
     volume_tag = nothing
-    for (dim, tag) in extruded
-        if dim == 3
-            volume_tag = tag
-        end
+    front_surface = nothing  # y=ymax
+    bottom_surface = nothing  # z=zmin (MOST)
+    right_surface = nothing   # x=xmax
+    top_surface = nothing     # z=zmax (top_wall)
+    left_surface = nothing    # x=xmin
+    back_surface = base_surface  # y=ymin
+
+    if length(extruded) >= 6
+        front_surface = extruded[1][2]      # [0] in array -> index 1 in Julia
+        volume_tag = extruded[2][2]         # [1] in array -> index 2 in Julia
+        bottom_surface = extruded[3][2]     # [2] in array -> index 3 in Julia (MOST)
+        right_surface = extruded[4][2]      # [3] in array -> index 4 in Julia
+        top_surface = extruded[5][2]        # [4] in array -> index 5 in Julia (top_wall)
+        left_surface = extruded[6][2]       # [5] in array -> index 6 in Julia
     end
 
-    # Get all surfaces for boundary identification
-    all_surfaces = gmsh.model.getEntities(2)
-    surface_tags_list = [tag for (dim, tag) in all_surfaces]
-
-    # Physical groups
+    # Add physical groups - matching LESICP.geo exactly
     if !isnothing(volume_tag)
         gmsh.model.addPhysicalGroup(3, [volume_tag], -1, "internal")
     end
 
-    # Identify boundary surfaces (this requires knowledge of GMSH's extrusion ordering)
-    # After extrusion: base (back), extruded top (front), and 4 lateral surfaces
-    back_surface = base_surface
+    # Add physical groups based on periodicity
+    if periodic_y
+        gmsh.model.addPhysicalGroup(2, [back_surface, front_surface], -1, "periodicy")
+    else
+        gmsh.model.addPhysicalGroup(2, [back_surface], -1, "back")
+        gmsh.model.addPhysicalGroup(2, [front_surface], -1, "front")
+    end
 
-    # The extruded surfaces are returned in specific order
-    # We need to identify them correctly
-    remaining = filter(x -> x != back_surface, surface_tags_list)
+    if periodic_x
+        gmsh.model.addPhysicalGroup(2, [left_surface, right_surface], -1, "periodicx")
+    else
+        gmsh.model.addPhysicalGroup(2, [left_surface], -1, "left")
+        gmsh.model.addPhysicalGroup(2, [right_surface], -1, "right")
+    end
 
-    if length(remaining) >= 5
-        front_surface = remaining[1]
-        bottom_surface = remaining[2]
-        right_surface = remaining[3]
-        top_surface = remaining[4]
-        left_surface = remaining[5]
-
-        # Add physical groups based on periodicity
-        if periodic_y
-            gmsh.model.addPhysicalGroup(2, [back_surface, front_surface], -1, "periodicy")
-        else
-            gmsh.model.addPhysicalGroup(2, [back_surface], -1, "back")
-            gmsh.model.addPhysicalGroup(2, [front_surface], -1, "front")
-        end
-
-        if periodic_x
-            gmsh.model.addPhysicalGroup(2, [left_surface, right_surface], -1, "periodicx")
-        else
-            gmsh.model.addPhysicalGroup(2, [left_surface], -1, "left")
-            gmsh.model.addPhysicalGroup(2, [right_surface], -1, "right")
-        end
-
-        if periodic_z
-            gmsh.model.addPhysicalGroup(2, [bottom_surface, top_surface], -1, "periodicz")
-        else
-            gmsh.model.addPhysicalGroup(2, [bottom_surface], -1, "MOST")
-            gmsh.model.addPhysicalGroup(2, [top_surface], -1, "top_wall")
-        end
+    if periodic_z
+        gmsh.model.addPhysicalGroup(2, [bottom_surface, top_surface], -1, "periodicz")
+    else
+        gmsh.model.addPhysicalGroup(2, [bottom_surface], -1, "MOST")
+        gmsh.model.addPhysicalGroup(2, [top_surface], -1, "top_wall")
     end
 
     # Generate mesh
@@ -590,12 +576,36 @@ function create_stretched_mesh_3d(params::MeshParams3D, z_stretch_factor::Float6
 
     gmsh.model.geo.synchronize()
 
-    # Add physical groups
-    for (dim, tag) in extruded
-        if dim == 3
-            gmsh.model.addPhysicalGroup(3, [tag], -1, "internal")
-        end
+    # Extract surfaces from extrusion (same pattern as other 3D functions)
+    volume_tag = nothing
+    front_surface = nothing  # y=ymax
+    bottom_surface = nothing  # z=zmin
+    right_surface = nothing   # x=xmax
+    top_surface = nothing     # z=zmax
+    left_surface = nothing    # x=xmin
+    back_surface = base_surface  # y=ymin
+
+    if length(extruded) >= 6
+        front_surface = extruded[1][2]
+        volume_tag = extruded[2][2]
+        bottom_surface = extruded[3][2]
+        right_surface = extruded[4][2]
+        top_surface = extruded[5][2]
+        left_surface = extruded[6][2]
     end
+
+    # Add physical groups
+    if !isnothing(volume_tag)
+        gmsh.model.addPhysicalGroup(3, [volume_tag], -1, "internal")
+    end
+
+    # Add boundary physical groups
+    gmsh.model.addPhysicalGroup(2, [back_surface], -1, "back")
+    gmsh.model.addPhysicalGroup(2, [front_surface], -1, "front")
+    gmsh.model.addPhysicalGroup(2, [bottom_surface], -1, "bottom")
+    gmsh.model.addPhysicalGroup(2, [right_surface], -1, "right")
+    gmsh.model.addPhysicalGroup(2, [top_surface], -1, "top")
+    gmsh.model.addPhysicalGroup(2, [left_surface], -1, "left")
 
     # Generate mesh
     gmsh.model.mesh.generate(3)
