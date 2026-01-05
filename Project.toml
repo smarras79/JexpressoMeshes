@@ -1,2 +1,17 @@
+name = "JexpressoMeshGenerator"
+uuid = "a1b2c3d4-e5f6-11ec-8fea-0242ac120002"
+authors = ["Jexpresso Team"]
+version = "1.0.0"
+
 [deps]
 Gmsh = "705231aa-382f-11e9-3f0c-b7cb4346fdeb"
+
+[compat]
+julia = "1.6"
+Gmsh = "0.2, 0.3"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
