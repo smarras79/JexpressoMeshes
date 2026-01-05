@@ -241,9 +241,10 @@ function generate_3d_structured_mesh(params::MeshParams3D; recombine=true, outpu
     gmsh.model.geo.synchronize()
 
     # Extrude the surface in y-direction to create 3D volume
+    # GMSH API: extrude(dimTags, dx, dy, dz, numElements, heights, recombine)
     extrude_vec = [0, params.ymax - params.ymin, 0]
     extruded = gmsh.model.geo.extrude([(2, base_surface)], extrude_vec[1], extrude_vec[2], extrude_vec[3],
-                                       [params.ny], recombine=recombine)
+                                       [params.ny], [], recombine)
 
     # Synchronize after extrusion
     gmsh.model.geo.synchronize()
@@ -541,8 +542,9 @@ function generate_3d_periodic_mesh(params::MeshParams3D; periodic_x=true, period
     gmsh.model.geo.synchronize()
 
     # Extrude to create volume
+    # GMSH API: extrude(dimTags, dx, dy, dz, numElements, heights, recombine)
     extruded = gmsh.model.geo.extrude([(2, base_surface)], 0, params.ymax - params.ymin, 0,
-                                       [params.ny], recombine=true)
+                                       [params.ny], [], true)
 
     gmsh.model.geo.synchronize()
 
@@ -664,8 +666,9 @@ function create_stretched_mesh_3d(params::MeshParams3D, z_stretch_factor::Float6
     gmsh.model.geo.synchronize()
 
     # Extrude with uniform spacing in y
+    # GMSH API: extrude(dimTags, dx, dy, dz, numElements, heights, recombine)
     extruded = gmsh.model.geo.extrude([(2, base_surface)], 0, params.ymax - params.ymin, 0,
-                                       [params.ny], recombine=true)
+                                       [params.ny], [], true)
 
     gmsh.model.geo.synchronize()
 
@@ -783,8 +786,9 @@ function generate_3d_unstructured_xz_mesh(params::MeshParams3D; output_file=noth
     gmsh.model.geo.synchronize()
 
     # Extrude in Y direction with structured layers
+    # GMSH API: extrude(dimTags, dx, dy, dz, numElements, heights, recombine)
     extruded = gmsh.model.geo.extrude([(2, base_surface)], 0, params.ymax - params.ymin, 0,
-                                       [params.ny], recombine=true)
+                                       [params.ny], [], true)
 
     gmsh.model.geo.synchronize()
 
