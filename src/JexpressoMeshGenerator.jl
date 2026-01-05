@@ -651,10 +651,11 @@ function create_stretched_mesh_3d(params::MeshParams3D, z_stretch_factor::Float6
     l4 = gmsh.model.geo.addLine(p4, p1)
 
     # Set transfinite with progression for stretching
+    # GMSH API: setTransfiniteCurve(tag, numNodes, meshType, coef)
     gmsh.model.geo.mesh.setTransfiniteCurve(l1, params.nx + 1)
     gmsh.model.geo.mesh.setTransfiniteCurve(l3, params.nx + 1)
-    gmsh.model.geo.mesh.setTransfiniteCurve(l2, params.nz + 1, coef=z_stretch_factor)
-    gmsh.model.geo.mesh.setTransfiniteCurve(l4, params.nz + 1, coef=z_stretch_factor)
+    gmsh.model.geo.mesh.setTransfiniteCurve(l2, params.nz + 1, "Progression", z_stretch_factor)
+    gmsh.model.geo.mesh.setTransfiniteCurve(l4, params.nz + 1, "Progression", z_stretch_factor)
 
     # Create base surface with line loop matching reference: {left, bottom, right, top}
     curve_loop = gmsh.model.geo.addCurveLoop([l4, l1, l2, l3])
