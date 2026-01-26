@@ -1,11 +1,11 @@
 nelemx = 16;
-nelemy = 16;
+nelemy = 1;
 nelemz = 19;
 
 xmin =  0;
 xmax =	6400;
 ymin =  0;
-ymax =  6400;
+ymax =  400;
 zmin =   0;
 zmax =  3000;
 gridsize = (xmax-xmin) / nelemx;
@@ -20,7 +20,6 @@ Line(2) = {2, 3};
 Line(3) = {3, 4};
 Line(4) = {4, 1};
 
-
 npx = nelemx + 1;
 npy = nelemy + 1;
 npz = nelemz + 1;
@@ -29,7 +28,7 @@ npz = nelemz + 1;
 Transfinite Line {1, 3} = npx; //Ceil((xmax-xmin)/gridsize) Using Progression 1;
 //Vertical sides
 Transfinite Line {4, -2} = npz Using Progression 1.0;
-
+//Transfinite Curve {4, -2} = npz + 1 Using Bump 0.2;
 
 Line Loop(11) = {4, 1, 2, 3};
 Plane Surface(12) = {11};
@@ -54,10 +53,12 @@ surfaceVector = Extrude {0,(ymax-ymin),0} {
     */
     Physical Surface("periodicy") = {12,34};
     Physical Volume("internal") = {1};
-    Physical Surface("free_slip") = {25,33};
+    Physical Surface("wall_model") = {25,33};
     Physical Surface("periodicx") = {21,29};
     // from Plane Surface (6) ...
   //+
+Show "*";
+//+
 Show "*";
 //+
 Show "*";
