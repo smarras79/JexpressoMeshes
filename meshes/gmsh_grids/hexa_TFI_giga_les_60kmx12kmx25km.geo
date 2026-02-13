@@ -1,6 +1,6 @@
-nelemx = 5;
-nelemy = 1;
-nelemz = 10;
+nelemx = 10;
+nelemy = 2;
+nelemz = 30;
 
 xmin =  -30000;
 xmax =	 30000;
@@ -28,7 +28,7 @@ npz = nelemz + 1;
 //Horizontal sides
 Transfinite Line {1, 3} = npx; //Ceil((xmax-xmin)/gridsize) Using Progression 1;
 //Vertical sides
-Transfinite Line {4, -2} = npz Using Progression 1.0;
+Transfinite Line {4, -2} = npz Using Progression 1;
 
 
 Line Loop(11) = {4, 1, 2, 3};
