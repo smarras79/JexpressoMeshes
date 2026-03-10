@@ -38,6 +38,13 @@ Recombine Surface{1};
 //-------------------------------------------------------------------------------
 //Boundary tagging
 //-------------------------------------------------------------------------------
-Physical Point("boundary",   1) = {1, 2, 3, 4};
-Physical Curve("free_slip",  2) = {1, 3, 2, 4};
+//Physical Point("boundary",   1) = {1, 2, 3, 4};
+//Physical Curve("free_slip",  2) ={1, 3, 2, 4};
+//Physical Surface("domain") = {1};
+
+Physical Point("boundary",  1) = {1, 2, 3, 4};
+Physical Curve("top", 2) = {3};
+Physical Curve("bottom", 3) = {1};
+Physical Curve("left", 4) = {4};
+Physical Curve("right", 5) = {2};
 Physical Surface("domain") = {1};
