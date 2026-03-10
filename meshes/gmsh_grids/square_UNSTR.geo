@@ -1,12 +1,11 @@
-nelemx = 20;
-nelemy = 20;
+nelemx = 10;
+nelemy = 10;
 nelemz = 1;
 
-xmin = -5000.0;
-xmax =  5000.0;
-ymin =     0.0;
-ymax = 10000.0;
-
+xmin = -1.0;
+xmax =  1.0;
+ymin = -1.0;
+ymax =  1.0;
 
 // 
 lc = (xmax - xmin)/nelemx;
