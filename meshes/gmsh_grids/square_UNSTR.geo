@@ -1,12 +1,11 @@
-nelemx = 20;
-nelemy = 20;
+nelemx = 10;
+nelemy = 10;
 nelemz = 1;
 
-xmin = -5000.0;
-xmax =  5000.0;
-ymin =     0.0;
-ymax = 10000.0;
-
+xmin = -1.0;
+xmax =  1.0;
+ymin = -1.0;
+ymax =  1.0;
 
 // 
 lc = (xmax - xmin)/nelemx;
@@ -39,6 +38,13 @@ Recombine Surface{1};
 //-------------------------------------------------------------------------------
 //Boundary tagging
 //-------------------------------------------------------------------------------
-Physical Point("boundary",   1) = {1, 2, 3, 4};
-Physical Curve("free_slip",  2) = {1, 3, 2, 4};
+//Physical Point("boundary",   1) = {1, 2, 3, 4};
+//Physical Curve("free_slip",  2) ={1, 3, 2, 4};
+//Physical Surface("domain") = {1};
+
+Physical Point("boundary",  1) = {1, 2, 3, 4};
+Physical Curve("top", 2) = {3};
+Physical Curve("bottom", 3) = {1};
+Physical Curve("left", 4) = {4};
+Physical Curve("right", 5) = {2};
 Physical Surface("domain") = {1};
