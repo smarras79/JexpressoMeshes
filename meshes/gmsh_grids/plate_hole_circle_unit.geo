@@ -46,6 +46,9 @@ Plane Surface(1) = {1, 2};
 Recombine Surface {1};
 
 // Physical Groups
-Physical Curve("outer_boundary", 1) = {1, 2, 3, 4};
-Physical Curve("circle_boundary", 2) = {5, 6, 7, 8};
+Physical Curve("bottom", 1) = {1};
+Physical Curve("right", 2) = {2};
+Physical Curve("top", 3) = {3};	
+Physical Curve("left", 4) = {4};
+Physical Curve("circle_boundary", 5) = {5, 6, 7, 8};
 Physical Surface("domain") = {1};
