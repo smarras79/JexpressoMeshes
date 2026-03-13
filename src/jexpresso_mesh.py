@@ -1,6 +1,13 @@
 #!/usr/bin/env python3
 """
 jexpresso_mesh.py
+
+How to run it:
+
+python3.11 jexpresso_mesh.py          # produces jexpresso_domain.msh
+python3.11 jexpresso_mesh.py --gui    # same + opens GMSH viewer
+
+
 ---------------------------------------------------------------------------
 2-D pure-quad mesh on [-1,1]^2 with text cut out as hollow geometry.
 
