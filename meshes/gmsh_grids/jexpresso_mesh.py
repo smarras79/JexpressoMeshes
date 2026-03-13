@@ -1,34 +1,22 @@
 #!/usr/bin/env python3
 """
 jexpresso_mesh.py
-─────────────────────────────────────────────────────────────────────────────
-Creates a 2-D quad mesh on the domain [-1,1]^2 with the word "JEXPRESSO"
-cut out as empty (hollow) geometry.
+---------------------------------------------------------------------------
+2-D pure-quad mesh on [-1,1]^2 with text cut out as hollow geometry.
 
-Design
-------
-* Letter outlines come from matplotlib's TextPath (handles Bezier curves).
-* Contour hierarchy is detected by containment depth:
-    depth 0  ->  letter body  (tool for boolean cut)
-    depth 1  ->  inner bowl of P / R / O  (separate domain surface, kept solid)
-* Boolean cut: rectangle - letter bodies -> background domain
-* Bowl surfaces are kept as separate OCC surfaces and added to the domain.
-  The bowl boundary curves also belong to the "word" physical group.
-* Pure-quad mesh via RecombineAll + SubdivisionAlgorithm=1.
-  Even segment counts on every curve are enforced explicitly before the 2D pass.
+Each letter gets its OWN Physical Curve tag, e.g. "J", "E1", "X", "P",
+"R", "E2", "S1", "S2", "O" -- allowing per-letter boundary conditions.
+Letters with inner bowls (P, R, O) have their bowl curves included in the
+same tag as their outer stroke.
 
 Physical groups
 ---------------
-  Curve  "bottom" / "right" / "top" / "left"  - outer box sides
-  Curve  "word"                                - ALL letter boundary curves
+  Curve  "bottom" / "right" / "top" / "left"  - outer box edges
+  Curve  "<LETTER>"  or  "<LETTER>_N"          - per-letter boundary curves
   Surface "domain"                             - the meshed region
 
-Requirements
-------------
-    pip install gmsh numpy matplotlib
-
-Usage
------
+Requirements:  pip install gmsh numpy matplotlib
+Usage:
     python jexpresso_mesh.py          # writes jexpresso_domain.msh
     python jexpresso_mesh.py --gui    # same + opens GMSH GUI
 """
@@ -58,8 +46,8 @@ def point_in_poly(pt, poly):
 
 
 def simplify(pts, tol=3e-3):
-    """Remove successive near-duplicate points."""
-    pts = np.array(pts, dtype=float)
+    """Remove successive near-duplicate vertices."""
+    pts = np.asarray(pts, dtype=float)
     keep = [0]
     for i in range(1, len(pts)):
         if np.linalg.norm(pts[i] - pts[keep[-1]]) > tol:
@@ -70,7 +58,7 @@ def simplify(pts, tol=3e-3):
 
 
 def get_text_polygons(text, size=1.0, font="DejaVu Sans", weight="bold"):
-    """Return list of (N,2) arrays - one closed contour per matplotlib polygon."""
+    """Return list of (N,2) arrays, one closed contour per glyph contour."""
     fp = FontProperties(family=font, weight=weight)
     tp = TextPath((0, 0), text, size=size, prop=fp)
     out = []
@@ -85,16 +73,14 @@ def get_text_polygons(text, size=1.0, font="DejaVu Sans", weight="bold"):
 
 def group_by_depth(polys):
     """
-    Classify polygons by containment depth (font-winding-agnostic).
-
-      depth 0  ->  letter outer body  (to be cut from the domain)
-      depth 1  ->  inner bowl (P/R/O) (kept as a separate domain surface)
-
+    Classify by containment depth (font-winding-agnostic).
+      depth 0  ->  letter outer body
+      depth 1  ->  inner bowl/counter of P, R, O
     Returns (outer_list, bowl_list).
     """
-    n = len(polys)
+    n         = len(polys)
     centroids = [p.mean(axis=0) for p in polys]
-    depth = [0] * n
+    depth     = [0] * n
     for i in range(n):
         for j in range(n):
             if i != j and point_in_poly(centroids[i], polys[j]):
@@ -102,6 +88,60 @@ def group_by_depth(polys):
     outers = [polys[i] for i in range(n) if depth[i] == 0]
     bowls  = [polys[i] for i in range(n) if depth[i] == 1]
     return outers, bowls
+
+
+def make_letter_labels(text):
+    """
+    Return a label list matching the non-space characters of *text*,
+    disambiguating repeated letters with _1, _2, ...
+
+    E.g. "JEXPRESSO" -> ["J","E1","X","R","E2","S1","S2"]
+         "ELEM LEARN"-> ["E1","L1","E2","M","L2","E3","A","R","N"]
+    """
+    chars = [c for c in text if c != ' ']
+    count = {}
+    total = {}
+    for c in chars:
+        total[c] = total.get(c, 0) + 1
+    labels = []
+    for c in chars:
+        count[c] = count.get(c, 0) + 1
+        if total[c] > 1:
+            labels.append(f"{c}_{count[c]}")
+        else:
+            labels.append(c)
+    return labels
+
+
+def poly_bbox(poly):
+    """Return (xmin, ymin, xmax, ymax) of a polygon."""
+    return poly[:,0].min(), poly[:,1].min(), poly[:,0].max(), poly[:,1].max()
+
+
+def curve_center(ctag):
+    """Return the midpoint of a curve's bounding box."""
+    x0, y0, _, x1, y1, _ = gmsh.model.getBoundingBox(1, ctag)
+    return 0.5*(x0+x1), 0.5*(y0+y1)
+
+
+def assign_curve_to_letter(ctag, letter_bboxes, margin=0.01):
+    """
+    Return the index into letter_bboxes whose bbox (expanded by margin)
+    contains the curve's centre.  Falls back to nearest-centroid if none match.
+    """
+    cx, cy = curve_center(ctag)
+    # First: strict containment test
+    for i, (xlo, ylo, xhi, yhi) in enumerate(letter_bboxes):
+        if (xlo - margin) <= cx <= (xhi + margin) and \
+           (ylo - margin) <= cy <= (yhi + margin):
+            return i
+    # Fallback: nearest bounding-box centroid
+    best, best_d = 0, float('inf')
+    for i, (xlo, ylo, xhi, yhi) in enumerate(letter_bboxes):
+        d = (cx - 0.5*(xlo+xhi))**2 + (cy - 0.5*(ylo+yhi))**2
+        if d < best_d:
+            best, best_d = i, d
+    return best
 
 
 # ---------------------------------------------------------------------------
@@ -115,21 +155,16 @@ class _Tags:
     sf  = 10000
 
     @classmethod
-    def new_pt(cls):
-        t = cls.pt; cls.pt += 1; return t
+    def new_pt(cls):  t = cls.pt;  cls.pt  += 1; return t
     @classmethod
-    def new_crv(cls):
-        t = cls.crv; cls.crv += 1; return t
+    def new_crv(cls): t = cls.crv; cls.crv += 1; return t
     @classmethod
-    def new_cl(cls):
-        t = cls.cl; cls.cl += 1; return t
+    def new_cl(cls):  t = cls.cl;  cls.cl  += 1; return t
     @classmethod
-    def new_sf(cls):
-        t = cls.sf; cls.sf += 1; return t
+    def new_sf(cls):  t = cls.sf;  cls.sf  += 1; return t
 
 
 def poly_to_curve_loop(occ, pts):
-    """Insert OCC points + lines for pts and return a CurveLoop tag."""
     pts = simplify(pts)
     n   = len(pts)
     if n < 3:
@@ -150,7 +185,6 @@ def poly_to_curve_loop(occ, pts):
 
 
 def poly_to_surface(occ, pts):
-    """Build a simple (single-loop, no holes) OCC plane surface."""
     cl = poly_to_curve_loop(occ, pts)
     if cl is None:
         return None
@@ -166,13 +200,13 @@ def poly_to_surface(occ, pts):
 def main(open_gui=False):
 
     # -- 3a.  Extract & scale letter outlines ---------------------------------
-    #TEXT      = "JEXPRESSO"
-    TEXT      = "ELEM LEARN"
+#    TEXT      = "JEXRESS" #JEXPRESSO
+    TEXT      = "JEX-EL"
     raw_polys = get_text_polygons(TEXT, size=1.0)
     if not raw_polys:
-        raise RuntimeError("No polygons extracted - check font availability.")
+        raise RuntimeError("No polygons extracted -- check font availability.")
 
-    all_pts = np.vstack(raw_polys)
+    all_pts  = np.vstack(raw_polys)
     xlo, ylo = all_pts.min(axis=0)
     xhi, yhi = all_pts.max(axis=0)
 
@@ -181,11 +215,19 @@ def main(open_gui=False):
     cx = 0.5 * (xlo + xhi)
     cy = 0.5 * (ylo + yhi)
 
-    scaled = [(p - np.array([cx, cy])) * s for p in raw_polys]
+    scaled        = [(p - np.array([cx, cy])) * s for p in raw_polys]
     outers, bowls = group_by_depth(scaled)
 
-    print(f"  '{TEXT}'  ->  outer contours: {len(outers)},  "
+    # Sort outer contours left-to-right (reading order)
+    outers.sort(key=lambda p: p[:,0].mean())
+
+    # Build per-letter labels  ["J","E_1","X","P","R","E_2","S_1","S_2","O"]
+    labels       = make_letter_labels(TEXT)
+    letter_bboxes = [poly_bbox(o) for o in outers]
+
+    print(f"  '{TEXT}'  ->  outer contours: {len(outers)}, "
           f"inner bowls (P/R/O): {len(bowls)}")
+    print(f"  Letter labels: {labels}")
 
     # -- 3b.  Build OCC model -------------------------------------------------
     gmsh.initialize()
@@ -195,14 +237,12 @@ def main(open_gui=False):
     # Background rectangle (tag=1)
     occ.addRectangle(-1.0, -1.0, 0.0, 2.0, 2.0, tag=1)
 
-    # One simple surface per letter OUTER body
     outer_surfs = []
     for poly in outers:
         sf = poly_to_surface(occ, poly)
         if sf is not None:
             outer_surfs.append(sf)
 
-    # One simple surface per inner BOWL (P/O/R) - stays as solid domain
     bowl_surfs = []
     for poly in bowls:
         sf = poly_to_surface(occ, poly)
@@ -214,8 +254,6 @@ def main(open_gui=False):
     print(f"  Bowl surface tags : {bowl_surfs}")
 
     # -- 3c.  Boolean cut: rectangle - letter bodies --------------------------
-    # Removes all letter areas (including bowl interiors) from the rectangle.
-    # Bowls re-appear as the separate stand-alone surfaces built above.
     cut_result, _ = occ.cut(
         [(2, 1)],
         [(2, t) for t in outer_surfs],
@@ -224,49 +262,68 @@ def main(open_gui=False):
     occ.synchronize()
 
     bg_surfs     = [s[1] for s in cut_result]
-    domain_surfs = bg_surfs + bowl_surfs   # background + bowl islands
-    print(f"  Background surfaces : {bg_surfs}")
+    domain_surfs = bg_surfs + bowl_surfs
+    print(f"  Background surfaces  : {bg_surfs}")
     print(f"  Total domain surfaces: {domain_surfs}")
 
-    # -- 3d.  Classify boundary curves into Physical Groups -------------------
+    # -- 3d.  Classify boundary curves ----------------------------------------
     bnd = gmsh.model.getBoundary(
         [(2, s) for s in domain_surfs], oriented=False, combined=False
     )
     all_curves = sorted({abs(b[1]) for b in bnd})
 
     tol = 0.02
-    bottom, right, top, left, word = [], [], [], [], []
+    bottom, right, top, left = [], [], [], []
+    word_curves = []           # all letter-boundary curves
+
     for ct in all_curves:
         x0, y0, _, x1, y1, _ = gmsh.model.getBoundingBox(1, ct)
         if   abs(y0 + 1) < tol and abs(y1 + 1) < tol: bottom.append(ct)
         elif abs(x0 - 1) < tol and abs(x1 - 1) < tol: right.append(ct)
         elif abs(y0 - 1) < tol and abs(y1 - 1) < tol: top.append(ct)
         elif abs(x0 + 1) < tol and abs(x1 + 1) < tol: left.append(ct)
-        else:                                           word.append(ct)
+        else:                                           word_curves.append(ct)
 
+    # Assign each word-boundary curve to the correct letter by bounding-box
+    # containment of the curve's centre.
+    per_letter = {label: [] for label in labels}
+    for ct in word_curves:
+        idx   = assign_curve_to_letter(ct, letter_bboxes)
+        label = labels[idx]
+        per_letter[label].append(ct)
+
+    # -- 3e.  Physical groups -------------------------------------------------
     gmsh.model.addPhysicalGroup(1, bottom, tag=1, name="bottom")
     gmsh.model.addPhysicalGroup(1, right,  tag=2, name="right")
     gmsh.model.addPhysicalGroup(1, top,    tag=3, name="top")
     gmsh.model.addPhysicalGroup(1, left,   tag=4, name="left")
-    gmsh.model.addPhysicalGroup(1, word,   tag=5, name="word")
+
+    # One Physical Curve per letter, tags starting at 10
+    letter_tag_start = 10
+    for i, label in enumerate(labels):
+        curves = per_letter.get(label, [])
+        if curves:
+            gmsh.model.addPhysicalGroup(1, curves,
+                                        tag=letter_tag_start + i,
+                                        name=label)
+            print(f"  Physical Curve '{label}' (tag {letter_tag_start+i}): "
+                  f"{len(curves)} curve(s)")
+
     gmsh.model.addPhysicalGroup(2, domain_surfs, tag=1, name="domain")
 
-    # -- 3e.  Mesh settings & generation - PURE QUADS -------------------------
+    # -- 3f.  Pure-quad mesh --------------------------------------------------
     lc = 0.06
     gmsh.option.setNumber("Mesh.CharacteristicLengthMin", 0.010)
     gmsh.option.setNumber("Mesh.CharacteristicLengthMax", lc)
-    gmsh.option.setNumber("Mesh.Algorithm",              8)   # Frontal-Delaunay quads
-    gmsh.option.setNumber("Mesh.RecombinationAlgorithm", 3)   # Blossom full-quad
+    gmsh.option.setNumber("Mesh.Algorithm",              8)  # Frontal-Del quads
+    gmsh.option.setNumber("Mesh.RecombinationAlgorithm", 3)  # Blossom full-quad
     gmsh.option.setNumber("Mesh.RecombineAll",           1)
-    # SubdivisionAlgorithm=1: barycentric split of residual triangles -> 0 triangles
-    # REQUIREMENT: every curve must have an even segment count.
-    gmsh.option.setNumber("Mesh.SubdivisionAlgorithm",   1)
-    gmsh.option.setNumber("Mesh.MinimumCurveNodes",      3)   # >= 2 segs per curve
+    gmsh.option.setNumber("Mesh.SubdivisionAlgorithm",   1)  # guarantees 0 triangles
+    gmsh.option.setNumber("Mesh.MinimumCurveNodes",      3)
 
-    # Pass 1: build initial 1D mesh
     gmsh.model.mesh.generate(1)
 
-    # Enforce even segment counts on every curve
+    # Enforce even segment counts (required by SubdivisionAlgorithm=1)
     fixed = 0
     for _, ctag in gmsh.model.getEntities(1):
         _, elem_tags, _ = gmsh.model.mesh.getElements(1, ctag)
@@ -278,11 +335,10 @@ def main(open_gui=False):
         print(f"  Forced even segments on {fixed} curve(s); re-running 1D ...")
         gmsh.model.mesh.generate(1)
 
-    # Pass 2: 2D mesh - recombine + barycentric subdivision -> pure quads
     gmsh.model.mesh.generate(2)
     gmsh.model.mesh.optimize("Laplace2D")
 
-    # -- 3f.  Output ----------------------------------------------------------
+    # -- 3g.  Output ----------------------------------------------------------
     out = "jexpresso_domain.msh"
     gmsh.write(out)
 
@@ -291,7 +347,9 @@ def main(open_gui=False):
     print(f"   right  : {len(right)}  curve(s)")
     print(f"   top    : {len(top)}    curve(s)")
     print(f"   left   : {len(left)}   curve(s)")
-    print(f"   word   : {len(word)}   curve(s)  <- all letter boundaries")
+    for label in labels:
+        n = len(per_letter.get(label, []))
+        print(f"   {label:<6} : {n} curve(s)")
 
     if open_gui:
         gmsh.fltk.run()
