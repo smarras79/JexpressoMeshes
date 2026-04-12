@@ -1,11 +1,11 @@
-nelemx = 16;
-nelemy = 16;
+nelemx = 10;
+nelemy = 10;
 nelemz = 1;
 
-xmin = -5000.0;
-xmax =  5000.0;
-ymin =     0.0;
-ymax = 10000.0;
+xmin = 0.0;
+xmax = 1.0e7;
+ymin = 0.0;
+ymax = 1.0e7;
 gridsize = (xmax-xmin) / nelemx;
 
 Point(1) = {xmin, ymin, gridsize};
@@ -57,8 +57,8 @@ Recombine Surface {12};
 // "My surface" (with an automatic tag) containing the geometrical surface 1:
 //
 Physical Point("boundary",   1) = {1, 2, 3, 4};
-Physical Curve("T1",   2) = {1, 3};
-Physical Curve("T2",   3) = {2, 4};
+Physical Curve("periodicy",   2) = {1, 3};
+Physical Curve("periodicx",   3) = {2, 4};
 //Physical Curve("free_slip",   2) = {1, 2, 3, 4};
 Physical Surface("domain") = {1};
 
