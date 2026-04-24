@@ -4,8 +4,8 @@ $EndMeshFormat
 $PhysicalNames
 4
 0 1 "boundary"
-1 2 "periodicx"
-1 3 "periodicy"
+1 2 "solid"
+1 3 "solid"
 2 4 "domain"
 $EndPhysicalNames
 $Entities
