@@ -57,9 +57,9 @@ Recombine Surface {12};
 // "My surface" (with an automatic tag) containing the geometrical surface 1:
 //
 Physical Point("boundary",   1) = {1, 2, 3, 4};
-//Physical Curve("inflow",     2) = {4};
-//Physical Curve("outflow",    3) = {2};
-Physical Curve("free_slip", 2) = {1,2,3,4};
+Physical Curve("periodicx",     2) = {4};
+Physical Curve("periodicy",    3) = {2};
+//Physical Curve("solid", 2) = {1,2,3,4};
 #Physical Curve("no_slip",   5) = {1};
 Physical Surface("domain") = {1};
 
