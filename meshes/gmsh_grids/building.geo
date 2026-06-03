@@ -5,26 +5,26 @@ SetFactory("Built-in");
 // --------------------
 // Dimensions, in meters
 // --------------------
-building_width  = 8.0;
-building_height = 16.0;
+building_width  = 200.0;
+building_height =  50.0;
 
 // Domain extents. Adjust these clearances if your CFD setup needs a
 // larger fetch or a lower/higher channel.
-x_min = -40.0;
+x_min = -800.0;
 x_b0  = -building_width/2.0;
 x_b1  =  building_width/2.0;
-x_max =  40.0;
+x_max =  800.0;
 
 y_min = 0.0;
 y_b   = building_height;
-y_max = 64.0;
+y_max = 450.0;
 
 // Structured mesh divisions per block edge.
 // Current count: 5*4 + 5*4 + (5 + 2 + 5)*5 = 100 quadrangles.
-nx_left  = 5;
-nx_bldg  = 2;
-nx_right = 5;
-ny_bldg  = 4;
+nx_left  = 10;
+nx_bldg  = 4;
+nx_right = 10;
+ny_bldg  = 1;
 ny_top   = 5;
 
 // --------------------
