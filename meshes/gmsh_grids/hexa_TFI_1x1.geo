@@ -1,5 +1,5 @@
-nelemx = 32;
-nelemy = 32;
+nelemx = 9;
+nelemy = 9;
 nelemz = 1;
 
 xmin = -1;
@@ -56,9 +56,11 @@ Recombine Surface {12};
 // in a single group (with prescribed tag 5); and a physical surface with name
 // "My surface" (with an automatic tag) containing the geometrical surface 1:
 //
-Physical Point("boundary",   1) = {1, 2, 3, 4};
-Physical Curve("periodicx",  2) = {2,4};
-Physical Curve("periodicz",  3) = {1,3};
+Physical Point("boundary",1) = {1, 2, 3, 4};
+Physical Curve("right",   2) = {2};
+Physical Curve("top",     3) = {3};
+Physical Curve("left",    4) = {4};
+Physical Curve("bottom",  5) = {1};
 Physical Surface("domain") = {1};
 
 //
