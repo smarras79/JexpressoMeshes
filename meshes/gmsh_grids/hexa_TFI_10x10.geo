@@ -8,10 +8,10 @@ ymin = 0;
 ymax = 2;
 gridsize = (xmax-xmin) / nelemx;
 
-Point(1) = {xmin, ymin, gridsize};
-Point(2) = {xmax, ymin, gridsize};
-Point(3) = {xmax, ymax, gridsize};
-Point(4) = {xmin, ymax, gridsize};
+Point(1) = {xmin, ymin, 0};
+Point(2) = {xmax, ymin, 0};
+Point(3) = {xmax, ymax, 0};
+Point(4) = {xmin, ymax, 0};
 
 Line(1) = {1, 2};
 Line(2) = {2, 3};
